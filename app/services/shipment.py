@@ -147,17 +147,24 @@ def get_shipment_by_id(db: Session, shipment_id: int, user: User) -> Shipment:
             raise HTTPException(status_code=403, detail="Not authorized to access this shipment")
     return shipment
 
+from sqlalchemy.orm import joinedload
+
 def list_shipments(db: Session, user: User, skip: int = 0, limit: int = 10):
-    query = db.query(Shipment)
+    query = db.query(Shipment).options(joinedload(Shipment.tracking_events))
+    count_query = db.query(Shipment)
+    
     if user.role == Role.CUSTOMER or user.role == Role.GUEST:
         if user.account_id:
             query = query.filter(Shipment.account_id == user.account_id)
+            count_query = count_query.filter(Shipment.account_id == user.account_id)
         else:
             query = query.filter(Shipment.customer_id == user.id)
+            count_query = count_query.filter(Shipment.customer_id == user.id)
     elif user.role == Role.DRIVER:
         query = query.filter(Shipment.driver_id == user.driver_profile.id)
-
-    total = query.count()
+        count_query = count_query.filter(Shipment.driver_id == user.driver_profile.id)
+    
+    total = count_query.count()
     items = query.order_by(Shipment.created_at.desc()).offset(skip).limit(limit).all()
     return {"total": total, "items": items}
 
