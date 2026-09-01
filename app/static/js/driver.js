@@ -1,0 +1,305 @@
+const token = localStorage.getItem('token');
+if (!token) window.location.href = '/login';
+
+let currentUser = null;
+let allShipments = [];
+let currentShipmentId = null;
+
+async function init() {
+    try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) throw new Error('Unauthenticated');
+        currentUser = await res.json();
+
+        if(currentUser.role !== 'DRIVER') {
+            window.location.href = '/dashboard';
+        }
+
+        document.getElementById('user-name').innerText = currentUser.name;
+        await loadShipments();
+    } catch (e) {
+        logout();
+    }
+}
+
+async function loadShipments() {
+    const tbody = document.getElementById('shipments-tbody');
+    try {
+        const res = await fetch(`/api/shipments?skip=0&limit=100`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        allShipments = data.items;
+
+        updateStats();
+        renderTable();
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" class="state-message error">Unable to load shipments.</td></tr>';
+    }
+}
+
+function updateStats() {
+    let stats = { IN_TRANSIT: 0, OUT_FOR_DELIVERY: 0, DELIVERED: 0 };
+    allShipments.forEach(s => {
+        if (stats[s.current_status] !== undefined) stats[s.current_status]++;
+    });
+
+    document.getElementById('stat-total').innerText = allShipments.length;
+    document.getElementById('stat-transit').innerText = stats.IN_TRANSIT;
+    document.getElementById('stat-out').innerText = stats.OUT_FOR_DELIVERY;
+    document.getElementById('stat-delivered').innerText = stats.DELIVERED;
+}
+
+function renderTable() {
+    const tbody = document.getElementById('shipments-tbody');
+    tbody.innerHTML = '';
+
+    if (allShipments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="state-message">No assignments found.</td></tr>';
+        return;
+    }
+
+    allShipments.forEach(s => {
+        const tr = document.createElement('tr');
+        const badgeClass = s.current_status.toLowerCase();
+        tr.innerHTML = `
+            <td><strong>${s.tracking_id}</strong></td>
+            <td>${s.sender_name} → ${s.receiver_name}</td>
+            <td>${s.origin}</td>
+            <td>${s.destination}</td>
+            <td><span class="badge ${badgeClass}">${s.current_status.replace(/_/g, ' ')}</span></td>
+            <td><button class="action-btn" onclick="openModal(${s.id})">Update</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function openModal(id) {
+    currentShipmentId = id;
+    const errDiv = document.getElementById('update-err');
+    const successDiv = document.getElementById('update-success');
+    errDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+
+    const timeline = document.getElementById('modal-timeline');
+    document.getElementById('modal').style.display = 'flex';
+
+    try {
+        const res = await fetch(`/api/shipments/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+
+        document.getElementById('modal-tracking-id').innerText = data.tracking_id;
+        document.getElementById('modal-status').innerText = data.current_status.replace(/_/g, ' ');
+        document.getElementById('modal-status').className = `badge ${data.current_status.toLowerCase()}`;
+        document.getElementById('modal-origin').innerText = data.origin;
+        document.getElementById('modal-destination').innerText = data.destination;
+
+        const nextStateMap = {
+            'ASSIGNED': 'PICKED_UP',
+            'PICKED_UP': 'IN_TRANSIT',
+            'IN_TRANSIT': 'OUT_FOR_DELIVERY',
+            'OUT_FOR_DELIVERY': 'DELIVERED',
+            'FAILED': 'OUT_FOR_DELIVERY' // Optional retry
+        };
+        const nextState = nextStateMap[data.current_status];
+        const statusSelect = document.getElementById('new-status');
+
+        if (nextState) {
+            statusSelect.innerHTML = `<option value="${nextState}">Next: ${nextState.replace(/_/g, ' ')}</option>`;
+            if (data.current_status === 'OUT_FOR_DELIVERY') {
+                statusSelect.innerHTML += `<option value="FAILED">Mark Failed</option>`;
+            }
+            if (data.current_status === 'IN_TRANSIT') {
+                statusSelect.innerHTML += `<option value="FAILED">Mark Failed</option>`;
+            }
+        } else {
+            statusSelect.innerHTML = `<option value="">No further actions</option>`;
+        }
+
+        timeline.innerHTML = '';
+        const canonicalStates = ['CREATED', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+        let reachedCurrent = false;
+
+        canonicalStates.forEach((state, index) => {
+            const ev = data.tracking_events.slice().reverse().find(e => e.status === state);
+            let icon = '○';
+            let extra = '';
+
+            if (ev) {
+                icon = (state === data.current_status) ? '●' : '✓';
+                if (state === data.current_status) reachedCurrent = true;
+                if (!reachedCurrent && state !== data.current_status) icon = '✓';
+                extra = `<div style="font-size: 0.8rem; color: #94a3b8;">${new Date(ev.created_at).toLocaleString()} - ${ev.description}</div>`;
+            } else if (!reachedCurrent && canonicalStates.indexOf(data.current_status) > index) {
+                icon = '✓';
+            }
+
+            timeline.innerHTML += `<div style="margin-bottom: 0.5rem; font-family: monospace; font-size: 1.1rem;">
+                ${icon} ${state.replace(/_/g, ' ')}
+                ${extra}
+            </div>`;
+            if (index < canonicalStates.length - 1) {
+                timeline.innerHTML += `<div style="margin-left: 0.4rem; color: #475569;">|</div>`;
+            }
+        });
+
+        const nonCanonical = data.tracking_events.filter(e => !canonicalStates.includes(e.status));
+        if (nonCanonical.length > 0) {
+            timeline.innerHTML += `<div style="margin-top: 1rem; border-top: 1px solid #334155; padding-top: 0.5rem;"><strong>Other Events</strong></div>`;
+            nonCanonical.forEach(ev => {
+                timeline.innerHTML += `<div style="margin-bottom: 0.5rem; font-family: monospace; font-size: 1rem; color: #ef4444;">
+                    ⚠ ${ev.status.replace(/_/g, ' ')}
+                    <div style="font-size: 0.8rem; color: #94a3b8;">${new Date(ev.created_at).toLocaleString()} - ${ev.description}</div>
+                </div>`;
+            });
+        }
+    } catch (e) {
+        timeline.innerHTML = '<div class="state-message error">Unable to load details.</div>';
+    }
+}
+
+async function updateStatus() {
+    const status = document.getElementById('new-status').value;
+    const loc = document.getElementById('new-loc').value;
+    const desc = document.getElementById('new-desc').value;
+    const errDiv = document.getElementById('update-err');
+    const successDiv = document.getElementById('update-success');
+
+    errDiv.style.display = 'none';
+
+    if (!desc) {
+        errDiv.innerText = "Description is required.";
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/shipments/${currentShipmentId}/status`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status, location: loc || null, description: desc })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            errDiv.innerText = (err.error && err.error.message) ? err.error.message : (err.detail || "Update failed.");
+            errDiv.style.display = 'block';
+        } else {
+            successDiv.innerText = "Status updated successfully!";
+            successDiv.style.display = 'block';
+            document.getElementById('new-loc').value = '';
+            document.getElementById('new-desc').value = '';
+            await openModal(currentShipmentId);
+            await loadShipments();
+        }
+    } catch (e) {
+        errDiv.innerText = "An unexpected error occurred.";
+        errDiv.style.display = 'block';
+    }
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function logout() { localStorage.removeItem('token'); window.location.href = '/login'; }
+window.onclick = function(event) { if (event.target == document.getElementById('modal')) closeModal(); }
+
+init();
+
+// ---------------- Notification System ---------------- //
+
+async function fetchUnreadCount() {
+    try {
+        const res = await fetch('/api/v1/notifications/unread-count', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const badge = document.getElementById('notif-badge');
+            if (badge) {
+                if (data.unread_count > 0) {
+                    badge.innerText = data.unread_count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Failed to fetch unread count", e);
+    }
+}
+
+async function fetchNotifications() {
+    try {
+        const res = await fetch('/api/v1/notifications', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const listDiv = document.getElementById('notification-list');
+            if (!listDiv) return;
+
+            listDiv.innerHTML = '';
+            if (data.items.length === 0) {
+                listDiv.innerHTML = '<div style="color:gray;">No notifications.</div>';
+                return;
+            }
+
+            data.items.forEach(n => {
+                const item = document.createElement('div');
+                item.style.padding = '10px';
+                item.style.borderBottom = '1px solid #eee';
+                item.style.background = n.is_read ? 'white' : '#f0f9ff';
+
+                let html = `<strong>${n.title}</strong><div style="font-size:0.85rem; color:#666; margin-top:4px;">${n.message}</div>`;
+                html += `<div style="font-size:0.75rem; color:#999; margin-top:4px;">${new Date(n.created_at).toLocaleString()}</div>`;
+
+                if (!n.is_read) {
+                    html += `<button onclick="markNotificationRead(${n.id})" style="margin-top:8px; font-size:0.75rem;">Mark as Read</button>`;
+                }
+                item.innerHTML = html;
+                listDiv.appendChild(item);
+            });
+        }
+    } catch (e) {
+        console.error("Failed to fetch notifications", e);
+    }
+}
+
+function openNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        fetchNotifications();
+    }
+}
+
+function closeNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function markNotificationRead(id) {
+    try {
+        await fetch(`/api/v1/notifications/${id}/read`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications();
+        fetchUnreadCount();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function markAllNotificationsRead() {
+    try {
+        await fetch('/api/v1/notifications/read-all', {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        fetchNotifications();
+        fetchUnreadCount();
+    } catch (e) {
+        console.error(e);
+    }
+}

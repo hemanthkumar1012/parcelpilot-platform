@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Operations Overview - ParcelPilot</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <h1 class="logo">ParcelPilot</h1>
+            <nav>
+                <ul>
+                    <li id="nav-drivers" style="display:none;"><a href="#" onclick="showSection('drivers')">Drivers (Admin)</a></li>
+                    <li class="active" id="nav-overview"><a href="#" onclick="showSection('overview')">Overview</a></li>
+                    <li><a href="#" onclick="alert('Coming soon')">Shipments</a></li>
+                    <li><a href="/track" target="_blank">Public Tracking</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <div id="user-name" style="font-weight: bold;">Loading...</div>
+                <div id="user-role" style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px;">...</div>
+                <div style="margin-bottom: 15px; cursor: pointer;" onclick="openNotificationModal()">
+                    🔔 Notifications <span id="notif-badge" style="background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; display: none;">0</span>
+                </div>
+                <button onclick="logout()" class="logout-btn">Log Out</button>
+            </div>
+        </aside>
+
+        <main class="content">
+            <header class="topbar" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="dashboard-title">Operations Overview</h2>
+                <button id="create-shipment-btn" style="display: none;" onclick="openCreateModal()">+ Create Shipment</button>
+            </header>
+
+            <div id="section-overview">
+            <section class="stats">
+                <div class="card"><h3>Total Shipments</h3><p id="stat-total">0</p></div>
+                <div class="card"><h3>In Transit</h3><p id="stat-transit">0</p></div>
+                <div class="card"><h3>Out for Delivery</h3><p id="stat-out">0</p></div>
+                <div class="card"><h3>Delivered</h3><p id="stat-delivered">0</p></div>
+            </section>
+
+            <section class="table-container">
+                <div class="table-header">
+                    <h3>Shipment Activity</h3>
+                    <div class="actions">
+                        <input type="text" id="search-box" placeholder="Search tracking ID..." onkeyup="filterTable()">
+                        <select id="status-filter" onchange="filterTable()">
+                            <option value="">All Statuses</option>
+                            <option value="CREATED">Created</option><option value="ASSIGNED">Assigned</option>
+                            <option value="PICKED_UP">Picked Up</option>
+                            <option value="IN_TRANSIT">In Transit</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="FAILED">Failed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tracking ID</th>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shipments-tbody">
+                        <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+            </div>
+
+            <!-- Drivers Section -->
+            <div id="section-drivers" style="display:none;">
+                <header class="topbar" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Driver Management</h2>
+                    <button class="action-btn" onclick="openDriverModal()">+ Add Driver</button>
+                </header>
+                <section class="table-container">
+                    <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Vehicle</th><th>Availability</th><th>Assigned</th></tr></thead>
+                    <tbody id="drivers-tbody"></tbody></table>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    
+    <!-- Create Shipment Modal -->
+    <div id="create-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeCreateModal()">&times;</span>
+            <h2>Create Shipment</h2>
+            <div id="create-err" class="error"></div>
+            <div id="create-success" class="success"></div>
+            
+            <form id="create-form" onsubmit="submitCreateShipment(event)">
+                <div class="form-group">
+                    <label>Sender Name</label>
+                    <input type="text" id="create-sender" required>
+                </div>
+                <div class="form-group">
+                    <label>Receiver Name</label>
+                    <input type="text" id="create-receiver" required>
+                </div>
+                <div class="form-group">
+                    <label>Origin</label>
+                    <input type="text" id="create-origin" required>
+                </div>
+                <div class="form-group">
+                    <label>Destination</label>
+                    <input type="text" id="create-dest" required>
+                </div>
+                <div class="form-group">
+                    <label>Estimated Delivery (Optional)</label>
+                    <input type="datetime-local" id="create-eta">
+                </div>
+                <button type="submit" id="create-submit-btn" style="width: 100%; margin-top: 1rem;">Create Shipment</button>
+            </form>
+        </div>
+    </div>
+    
+    
+    <div id="driver-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeDriverModal()">&times;</span>
+            <h2>Register Driver</h2>
+            <div id="driver-err" class="error"></div>
+            <form onsubmit="submitDriver(event)">
+                <div class="form-group"><label>Name</label><input type="text" id="drv-name" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="drv-email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="drv-pwd" required></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="drv-phone" required></div>
+                <div class="form-group"><label>Vehicle Number</label><input type="text" id="drv-veh-num" required></div>
+                <div class="form-group"><label>Vehicle Type</label><input type="text" id="drv-veh-type" required></div>
+                <button type="submit" style="width: 100%; margin-top: 1rem;">Register Driver</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Shipment <span id="modal-tracking-id"></span></h2>
+            <div class="modal-body">
+                <div class="details-left">
+                    <p><strong>Status:</strong> <span id="modal-status" class="badge"></span></p>
+                    <p><strong>Customer ID:</strong> <span id="modal-customer"></span></p>
+                    <p><strong>Origin:</strong> <span id="modal-origin"></span></p>
+                    <p><strong>Destination:</strong> <span id="modal-destination"></span></p>
+                    
+    <div id="admin-assign" style="display: none; margin-top: 1rem; background: #0f172a; padding: 1rem; border-radius: 8px;">
+        <h3>Assign Driver</h3>
+        <select id="assign-driver-select"></select>
+        <button onclick="assignDriver()" style="margin-top: 1rem;">Update Assignment</button>
+        <button onclick="unassignDriver()" style="margin-top: 1rem; background: #ef4444;">Unassign</button>
+    </div>
+    
+                    <div id="admin-update" style="display: none; margin-top: 2rem; background: #0f172a; padding: 1rem; border-radius: 8px;">
+                        <h3>Update Status</h3>
+                        <div id="update-err" class="error"></div>
+                        <div id="update-success" class="success"></div>
+                        <select id="new-status">
+                            <option value="CREATED">Created</option><option value="ASSIGNED">Assigned</option>
+                            <option value="PICKED_UP">Picked Up</option>
+                            <option value="IN_TRANSIT">In Transit</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="FAILED">Failed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="RETURNED">Returned</option>
+                        </select>
+                        <input type="text" id="new-loc" placeholder="Location (optional)" style="margin-top: 0.5rem; width: 100%; box-sizing:border-box;">
+                        <input type="text" id="new-desc" placeholder="Description" style="margin-top: 0.5rem; width: 100%; box-sizing:border-box;">
+                        <button onclick="updateStatus()" style="margin-top: 1rem;">Update</button>
+                    </div>
+                </div>
+                <div class="details-right timeline" id="modal-timeline">
+                    <!-- events -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/dashboard.js"></script>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div class="modal-content" style="background:white; padding:20px; border-radius:8px; width:400px; max-height:80vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3>Notifications</h3>
+                <div>
+                    <button onclick="markAllNotificationsRead()" style="margin-right:10px; font-size:0.8rem; cursor:pointer;">Mark All Read</button>
+                    <button onclick="closeNotificationModal()" style="cursor:pointer;">✕</button>
+                </div>
+            </div>
+            <div id="notification-list" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Notifications go here -->
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

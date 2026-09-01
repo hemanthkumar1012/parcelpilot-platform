@@ -1,0 +1,24 @@
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+from typing import List
+from app.db.database import get_db
+from app.db.models import User, Role
+from app.api.deps import get_current_user
+from app.schemas.driver import DriverCreate, DriverResponse
+from app.services import driver as driver_service
+
+router = APIRouter()
+
+@router.post("", response_model=DriverResponse, status_code=201)
+def create_driver(driver_in: DriverCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Register a new driver profile (Admin only)."""
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can create drivers")
+    return driver_service.create_driver(db, driver_in)
+
+@router.get("", response_model=List[DriverResponse])
+def list_drivers(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """List all drivers and their assignments (Admin only)."""
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can view drivers")
+    return driver_service.list_drivers(db, skip=skip, limit=limit)
