@@ -1,14 +1,26 @@
 import json
 from sqlalchemy.orm import Session
-from app.db.models import User, Shipment, Order, SupportTicket, ShipmentTrackingEvent, AgentAction, CustomerAccount
+from app.db.models import User, Shipment, Order, SupportTicket, ShipmentTrackingEvent, AgentAction, CustomerAccount, Role
 from datetime import datetime, timezone
 import uuid
 
+def _is_authorized(entity, current_user: User) -> bool:
+    if current_user.role == Role.ADMIN:
+        return True
+    if current_user.account_id:
+        return getattr(entity, "account_id", None) == current_user.account_id
+    # Fallback to user ownership if no account_id
+    if hasattr(entity, "customer_id"):
+        return entity.customer_id == current_user.id
+    if hasattr(entity, "requester_id"):
+        return entity.requester_id == current_user.id
+    if hasattr(entity, "user_id"):
+        return entity.user_id == current_user.id
+    return False
+
 def lookup_shipment(db: Session, tracking_id: str, current_user: User):
     shipment = db.query(Shipment).filter(Shipment.tracking_id == tracking_id).first()
-    if not shipment:
-        return {"error": "Shipment not found."}
-    if current_user.role.value != "ADMIN" and shipment.account_id != current_user.account_id:
+    if not shipment or not _is_authorized(shipment, current_user):
         return {"error": "Shipment not found or unauthorized."}
     
     return {
@@ -22,9 +34,7 @@ def lookup_shipment(db: Session, tracking_id: str, current_user: User):
 
 def lookup_order(db: Session, order_id: str, current_user: User):
     order = db.query(Order).filter(Order.order_id == order_id).first()
-    if not order:
-        return {"error": "Order not found."}
-    if current_user.role.value != "ADMIN" and order.account_id != current_user.account_id:
+    if not order or not _is_authorized(order, current_user):
         return {"error": "Order not found or unauthorized."}
     
     shipments = [{"tracking_id": s.tracking_id, "status": s.current_status.value} for s in order.shipments]
@@ -36,7 +46,7 @@ def lookup_order(db: Session, order_id: str, current_user: User):
 
 def get_tracking_history(db: Session, tracking_id: str, current_user: User):
     shipment = db.query(Shipment).filter(Shipment.tracking_id == tracking_id).first()
-    if not shipment or (current_user.role.value != "ADMIN" and shipment.account_id != current_user.account_id):
+    if not shipment or not _is_authorized(shipment, current_user):
         return {"error": "Shipment not found or unauthorized."}
     
     events = []
@@ -51,9 +61,7 @@ def get_tracking_history(db: Session, tracking_id: str, current_user: User):
 
 def lookup_support_ticket(db: Session, ticket_id: str, current_user: User):
     ticket = db.query(SupportTicket).filter(SupportTicket.ticket_id == ticket_id).first()
-    if not ticket:
-        return {"error": "Ticket not found."}
-    if current_user.role.value != "ADMIN" and ticket.account_id != current_user.account_id:
+    if not ticket or not _is_authorized(ticket, current_user):
         return {"error": "Ticket not found or unauthorized."}
     
     return {
@@ -66,7 +74,7 @@ def lookup_support_ticket(db: Session, ticket_id: str, current_user: User):
     }
 
 def create_support_ticket(db: Session, subject: str, description: str, priority: str, current_user: User):
-    if current_user.role.value == "GUEST":
+    if current_user.role == Role.GUEST:
         return {"error": "Guests cannot create support tickets."}
     if not current_user.account_id:
         return {"error": "User does not have an active account."}
@@ -88,7 +96,7 @@ def create_support_ticket(db: Session, subject: str, description: str, priority:
 
 def shipment_sla_status(db: Session, tracking_id: str, current_user: User):
     shipment = db.query(Shipment).filter(Shipment.tracking_id == tracking_id).first()
-    if not shipment or (current_user.role.value != "ADMIN" and shipment.account_id != current_user.account_id):
+    if not shipment or not _is_authorized(shipment, current_user):
         return {"error": "Shipment not found or unauthorized."}
     
     account = db.query(CustomerAccount).filter(CustomerAccount.id == shipment.account_id).first()
@@ -106,11 +114,11 @@ def shipment_sla_status(db: Session, tracking_id: str, current_user: User):
     }
 
 def prepare_escalation(db: Session, ticket_id: str, reason: str, current_user: User):
-    if current_user.role.value == "GUEST":
+    if current_user.role == Role.GUEST:
         return {"error": "Guests cannot prepare escalations."}
     
     ticket = db.query(SupportTicket).filter(SupportTicket.ticket_id == ticket_id).first()
-    if not ticket or (current_user.role.value != "ADMIN" and ticket.account_id != current_user.account_id):
+    if not ticket or not _is_authorized(ticket, current_user):
         return {"error": "Ticket not found or unauthorized."}
 
     action_id = f"ACT-{uuid.uuid4().hex[:6].upper()}"
@@ -129,11 +137,11 @@ def prepare_escalation(db: Session, ticket_id: str, reason: str, current_user: U
     return {"message": f"Escalation prepared. Please confirm action {action_id} to proceed.", "action_id": action_id}
 
 def confirm_action(db: Session, action_id: str, confirmed: bool, current_user: User):
-    if current_user.role.value == "GUEST":
+    if current_user.role == Role.GUEST:
         return {"error": "Guests cannot confirm actions."}
     
     action = db.query(AgentAction).filter(AgentAction.action_id == action_id, AgentAction.status == "pending").first()
-    if not action or (current_user.role.value != "ADMIN" and action.account_id != current_user.account_id):
+    if not action or not _is_authorized(action, current_user):
         return {"error": "Pending action not found or unauthorized."}
 
     if confirmed:
