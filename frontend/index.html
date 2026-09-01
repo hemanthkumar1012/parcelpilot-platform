@@ -1737,6 +1737,27 @@
 
   </div>
 
+  <!-- ============================= AI ASSISTANT ============================= -->
+  <div id="ai-assistant-widget" class="ai-widget hidden">
+    <div class="ai-header">
+      <h3>ParcelPilot Support</h3>
+      <button id="ai-close-btn" class="ai-close-btn" aria-label="Close AI">o </button>
+    </div>
+    <div id="ai-messages" class="ai-messages">
+      <div class="ai-message ai-message-assistant">
+        Hello! I'm your ParcelPilot support assistant. How can I help you today?
+      </div>
+    </div>
+    <form id="ai-form" class="ai-input-area">
+      <input type="text" id="ai-input" placeholder="Type your message..." autocomplete="off" required />
+      <button type="submit" id="ai-send-btn" class="btn btn-primary btn-sm">Send</button>
+    </form>
+  </div>
+  
+  <button id="ai-floating-btn" class="ai-floating-btn" aria-label="Open AI Assistant">
+    - Support
+  </button>
+
   <!-- ============================= JAVASCRIPT ============================= -->
 
   <script src="app.js"></script>

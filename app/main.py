@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from contextlib import asynccontextmanager
-from app.api.endpoints import health, auth, shipments, drivers, notifications
+from app.api.endpoints import health, auth, shipments, drivers, notifications, chat
 from app.core.config import settings
 from app.db.database import engine, Base
 from app.db import models
@@ -221,6 +221,13 @@ api_v1_router.include_router(
     notifications.router,
     prefix="/notifications",
     tags=["notifications"]
+)
+
+
+api_v1_router.include_router(
+    chat.router,
+    prefix="/chat",
+    tags=["chat"]
 )
 
 

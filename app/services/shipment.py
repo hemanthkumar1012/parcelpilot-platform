@@ -40,9 +40,12 @@ def create_tracking_event(db: Session, shipment_id: int, status: ShipmentStatus,
 def create_shipment(db: Session, shipment_in: ShipmentCreate, customer_id: int) -> Shipment:
     tracking_id = generate_tracking_id(db)
 
+    customer = db.query(User).filter(User.id == customer_id).first()
+
     db_shipment = Shipment(
         tracking_id=tracking_id,
         customer_id=customer_id,
+        account_id=customer.account_id if customer else None,
         sender_name=shipment_in.sender_name,
         receiver_name=shipment_in.receiver_name,
         origin=shipment_in.origin,
@@ -134,8 +137,11 @@ def get_shipment_by_id(db: Session, shipment_id: int, user: User) -> Shipment:
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
-    if user.role == Role.CUSTOMER and shipment.customer_id != user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to access this shipment")
+    if user.role == Role.CUSTOMER or user.role == Role.GUEST:
+        if user.account_id and shipment.account_id != user.account_id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this shipment")
+        elif not user.account_id and shipment.customer_id != user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this shipment")
     if user.role == Role.DRIVER:
         if not user.driver_profile or shipment.driver_id != user.driver_profile.id:
             raise HTTPException(status_code=403, detail="Not authorized to access this shipment")
@@ -143,8 +149,11 @@ def get_shipment_by_id(db: Session, shipment_id: int, user: User) -> Shipment:
 
 def list_shipments(db: Session, user: User, skip: int = 0, limit: int = 10):
     query = db.query(Shipment)
-    if user.role == Role.CUSTOMER:
-        query = query.filter(Shipment.customer_id == user.id)
+    if user.role == Role.CUSTOMER or user.role == Role.GUEST:
+        if user.account_id:
+            query = query.filter(Shipment.account_id == user.account_id)
+        else:
+            query = query.filter(Shipment.customer_id == user.id)
     elif user.role == Role.DRIVER:
         query = query.filter(Shipment.driver_id == user.driver_profile.id)
 
