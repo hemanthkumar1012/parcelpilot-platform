@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ParcelPilot — Logistics Control Center</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
@@ -19,9 +21,10 @@
 
   <!-- ============================= LOGIN SCREEN ============================= -->
 
-  <div id="login-screen" class="login-screen">
+  <div id="login-view">
+<div id="login-screen" class="login-screen">
 
-```
+
 <div class="login-brand">
 
   <div class="login-brand-inner">
@@ -274,18 +277,20 @@
   </div>
 
 </div>
-```
+
 
   </div>
 
   <!-- ============================= MAIN APPLICATION ============================= -->
 
-  <div
+  </div>
+<div id="dashboard-view" hidden>
+<div
     id="app-screen"
     class="app-screen"
     hidden>
 
-```
+
 <button
   id="sidebar-backdrop"
   class="sidebar-backdrop"
@@ -504,7 +509,7 @@
 
     <button
       id="logout-btn"
-      class="btn btn-ghost btn-block"
+      class="icon-btn btn-block"
       type="button">
       Log out
     </button>
@@ -558,7 +563,7 @@
       <input
         type="text"
         id="global-search-input"
-        placeholder="Search tracking ID, receiver, city…"
+        placeholder="Search shipments..." city…"
         aria-label="Global shipment search" />
 
       <button
@@ -608,73 +613,9 @@
 
         <!-- ============================= RECRUITER DEMO BANNER ============================= -->
 
-      <div <!-- ============================= RECRUITER DEMO BANNER ============================= -->
+      <!-- ============================= RECRUITER DEMO BANNER ============================= -->
 
 <div
-  id="guest-demo-banner"
-  class="guest-demo-banner"
-  hidden>
-
-  <div
-    class="guest-demo-banner-icon"
-    aria-hidden="true">
-    ✓
-  </div>
-
-  <div class="guest-demo-banner-content">
-
-    <div class="guest-demo-banner-title">
-      ParcelPilot Demo Environment
-    </div>
-
-    <div class="guest-demo-banner-text">
-      You are viewing a read-only demonstration.
-      Explore shipments, tracking, drivers, analytics,
-      and operational notifications without creating an account.
-    </div>
-
-  </div>
-
-  <button
-    type="button"
-    id="guest-demo-signin-btn"
-    class="btn btn-primary btn-sm">
-    Sign in for full access
-  </button>
-
-</div>
-        id="guest-demo-banner"
-        class="guest-demo-banner"
-        hidden>
-
-        <div
-          class="guest-demo-banner-icon"
-          aria-hidden="true">
-          ✓
-        </div>
-
-        <div class="guest-demo-banner-content">
-
-          <div class="guest-demo-banner-title">
-            ParcelPilot Demo Environment
-          </div>
-
-          <div class="guest-demo-banner-text">
-            You are viewing a read-only demonstration.
-            Explore shipments, tracking, drivers, analytics,
-            and operational notifications without creating an account.
-          </div>
-
-        </div>
-
-        <button
-          type="button"
-          id="guest-demo-signin-btn"
-          class="btn btn-primary btn-sm">
-          Sign in for full access
-        </button>
-
-      </div>
     <!-- ============================= DASHBOARD ============================= -->
 
     <section
@@ -780,6 +721,7 @@
           <div
             id="activity-chart"
             class="activity-chart">
+  <canvas id="chart-activity"></canvas>
           </div>
 
         </div>
@@ -802,6 +744,7 @@
           <div
             id="status-distribution"
             class="status-distribution">
+  <canvas id="chart-distribution"></canvas>
           </div>
 
         </div>
@@ -994,11 +937,7 @@
 
         <div class="search-input-wrap">
 
-          <span
-            class="search-icon"
-            aria-hidden="true">
-            ⌕
-          </span>
+          <span class="search-icon"><i data-lucide="search" width="16" height="16"></i></span>
 
           <input
             type="text"
@@ -1200,11 +1139,7 @@
 
         <div class="search-input-wrap">
 
-          <span
-            class="search-icon"
-            aria-hidden="true">
-            ⌕
-          </span>
+          <span class="search-icon"><i data-lucide="search" width="16" height="16"></i></span>
 
           <input
             type="text"
@@ -1410,7 +1345,7 @@
   </main>
 
 </div>
-```
+
 
   </div>
 
@@ -1421,7 +1356,7 @@
     class="modal-overlay"
     hidden>
 
-```
+
 <div
   class="modal"
   role="dialog"
@@ -1545,7 +1480,7 @@
 
       <button
         type="button"
-        class="btn btn-ghost"
+        class="icon-btn"
         data-close-modal="create-shipment-modal">
         Cancel
       </button>
@@ -1571,7 +1506,7 @@
   </form>
 
 </div>
-```
+
 
   </div>
 
@@ -1582,7 +1517,7 @@
     class="modal-overlay"
     hidden>
 
-```
+
 <div
   class="modal"
   role="dialog"
@@ -1666,7 +1601,7 @@
 
       <button
         type="button"
-        class="btn btn-ghost"
+        class="icon-btn"
         data-close-modal="create-driver-modal">
         Cancel
       </button>
@@ -1693,7 +1628,7 @@
   </form>
 
 </div>
-```
+
 
   </div>
 
@@ -1704,7 +1639,7 @@
     class="modal-overlay"
     hidden>
 
-```
+
 <div
   class="modal modal-lg"
   role="dialog"
@@ -1733,7 +1668,7 @@
   </div>
 
 </div>
-```
+
 
   </div>
 
@@ -1741,7 +1676,7 @@
   <div id="ai-assistant-widget" class="ai-widget hidden">
     <div class="ai-header">
       <h3>ParcelPilot Support</h3>
-      <button id="ai-close-btn" class="ai-close-btn" aria-label="Close AI">&times;</button>
+      <button id="ai-close-btn" class="ai-close-btn"><i data-lucide="x"></i></button>
     </div>
     <div id="ai-messages" class="ai-messages">
       <div class="ai-message ai-message-assistant">
@@ -1764,3 +1699,4 @@
 
 </body>
 </html>
+</div>

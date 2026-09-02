@@ -98,3 +98,10 @@ The AI assistant uses the `openai` Python package. It expects `OPENAI_API_KEY` i
 - **Tenant Isolation:** All database queries implicitly filter by the authenticated user's account ID.
 - **Guest Restrictions:** Guests cannot perform state-changing mutations (e.g., escalating support tickets).
 - **Tool Validation:** The AI tool dispatch layer catches malformed tool arguments safely.
+
+## Security & Agent Safety Design
+
+The platform ensures strict boundary isolation between the LLM logic and application state:
+
+- **Staged-Confirmation Flow:** The AI is strictly barred from modifying sensitive entities directly. Instead, when an LLM requests a state change (like escalating a ticket), it invokes `prepare_escalation` in `app/tools/agent_tools.py`. This generates a secure `pending` record in the `agent_actions` table. A human user must explicitly submit a subsequent `confirm_action` call to formally execute it.
+- **Tenant Isolation Enforcement:** The LLM does NOT manage authorization parameters (e.g., `account_id`). When the AI attempts to lookup data, the `_is_authorized` fallback in `app/tools/agent_tools.py` intercepts the retrieved record. It enforces that `current_user.account_id` matching rules apply explicitly at the backend execution layer before passing any data back to the LLM context.

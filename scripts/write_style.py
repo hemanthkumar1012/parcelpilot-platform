@@ -1,4 +1,4 @@
-
+css = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -101,55 +101,19 @@ ul, li { list-style: none; margin: 0; padding: 0; }
   font-size: 20px; font-weight: 800; color: var(--primary-blue);
   margin-bottom: var(--space-4);
 }
-
-
-/* Sidebar Nav - Box Structured Buttons */
-.sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-3); display: flex; flex-direction: column; gap: 8px; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 0 var(--space-2); }
 .nav-item {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: 12px 16px;
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   font-weight: 500;
   cursor: pointer;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
-.nav-item:hover {
-  background-color: var(--bg-app);
-  border-color: #cbd5e1;
-  color: var(--text-main);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
-}
-.nav-item[aria-current="page"] {
-  background-color: var(--primary-blue);
-  border-color: var(--primary-blue);
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
-.nav-item svg { width: 20px; height: 20px; }
-
-/* Fix logout button to match */
-#logout-btn {
-  display: flex; align-items: center; justify-content: center;
-  padding: 10px 16px;
-  background-color: white;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  color: var(--text-main);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-  width: 100%;
-}
-#logout-btn:hover {
-  background-color: #fef2f2;
-  border-color: #fecaca;
-  color: #ef4444;
+.nav-item:hover, .nav-item[aria-current="page"] {
+  background-color: var(--primary-light);
+  color: var(--primary-blue);
 }
 .nav-badge {
   background-color: var(--primary-blue);
@@ -395,185 +359,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
   }
   .animate-on-scroll { opacity: 1; transform: none; }
 }
+"""
 
-
-/* Icon Buttons */
-.icon-btn, .sidebar-close-btn, .mobile-menu-btn {
-  display: flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px;
-  border: none; background: transparent;
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-}
-.icon-btn:hover, .sidebar-close-btn:hover, .mobile-menu-btn:hover {
-  background-color: var(--primary-light);
-  color: var(--primary-blue);
-}
-.icon-btn svg { width: 20px; height: 20px; }
-
-
-/* Stat Card Badges */
-.stat-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--space-2);
-}
-.stat-icon {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-}
-.stat-icon svg { width: 18px; height: 18px; }
-.stat-icon-total { background-color: var(--status-info-bg); color: var(--status-info); }
-.stat-icon-transit { background-color: #fef3c7; color: #d97706; }
-.stat-icon-delivered { background-color: var(--status-ok-bg); color: var(--status-ok); }
-.stat-icon-alerts { background-color: var(--status-error-bg); color: var(--status-error); }
-
-.activity-chart, .panel-distribution { position: relative; height: 300px; padding: var(--space-3); }
-
-
-#activity-chart, #status-distribution {
-  position: relative;
-  height: 280px;
-  width: 100%;
-}
-.panel-distribution, .activity-chart-panel {
-  height: auto; 
-  padding: var(--space-4);
-}
-
-
-/* Data Table Styles */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-.data-table th {
-  padding: var(--space-3) var(--space-4);
-  font-weight: 600;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border-light);
-  background-color: var(--bg-app);
-}
-.data-table td {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-light);
-  color: var(--text-main);
-  vertical-align: middle;
-}
-.data-table tr:hover td {
-  background-color: var(--primary-light);
-}
-
-
-@media (max-width: 480px) {
-  .ai-widget {
-    top: 0; bottom: 0; right: 0; left: 0;
-    width: 100%; 
-    height: 100vh;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-  }
-}
-
-
-/* 3D Tilt and Layered Shadows */
-.stat-card, .panel, .login-form-card {
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-  transition: transform 150ms ease, box-shadow 150ms ease;
-  will-change: transform, box-shadow;
-}
-
-.stat-card:hover, .panel:hover, .login-form-card:hover {
-  box-shadow:
-    0 4px 8px rgba(15, 23, 42, 0.06),
-    0 12px 24px rgba(37, 99, 235, 0.08);
-}
-
-
-/* -----------------------------------------
-   VISUAL POLISH & HIERARCHY OVERRIDES
-   ----------------------------------------- */
-/* 1. Stat Cards Typography & Accents */
-.stat-card {
-  position: relative;
-  padding-top: var(--space-5);
-  border-top: 4px solid var(--border-light);
-}
-.stat-card:nth-child(1) { border-top-color: var(--primary-blue); }
-.stat-card:nth-child(2) { border-top-color: var(--status-pending); }
-.stat-card:nth-child(3) { border-top-color: var(--status-ok); }
-.stat-card:nth-child(4) { border-top-color: var(--status-error); }
-
-.stat-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--text-main);
-  line-height: 1.1;
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-1);
-}
-
-.stat-label {
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.stat-foot {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* 2. Panel Header Stacking */
-.panel-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
-  margin-bottom: var(--space-4);
-}
-.panel-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-}
-.panel-header p {
-  color: var(--text-muted);
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* 3. Whitespace / Breathing Room */
-.stats-grid {
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
-}
-.dashboard-grid {
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
-}
-.page {
-  padding: var(--space-6) var(--space-6) 100px;
-}
-
-/* 4. Global Search Input */
-.global-search input {
-  width: 250px;
-}
-@media (max-width: 768px) {
-  .global-search input { width: 100%; }
-}
-
-/* 5. Lucide Icon styling */
-[data-lucide] {
-  vertical-align: middle;
-}
+with open('frontend/style.css', 'w', encoding='utf-8') as f:
+    f.write(css)

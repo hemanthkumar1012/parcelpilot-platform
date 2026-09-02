@@ -6,3 +6,10 @@ __pycache__/
 venv/
 env/
 test.db
+# Temp files
+*.txt
+*.patch
+e2e_results.json
+e2e_screenshots/
+original_app.js
+.coverage

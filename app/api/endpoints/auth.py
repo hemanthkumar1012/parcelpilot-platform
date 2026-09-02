@@ -82,7 +82,7 @@ def guest_login(db: Session = Depends(get_db)) -> Any:
         db.commit()
 
     guest_id = str(uuid.uuid4())[:8]
-    email = f"guest_{guest_id}@parcelpilot.local"
+    email = f"guest_{guest_id}@guest.parcelpilot.com"
     
     db_user = models.User(
         name=f"Guest User {guest_id}",

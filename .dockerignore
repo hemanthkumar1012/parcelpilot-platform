@@ -5,3 +5,7 @@ __pycache__/
 .git/
 .github/
 scratch/
+
+test.db
+tests/
+data/

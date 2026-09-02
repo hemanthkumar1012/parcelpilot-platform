@@ -95,7 +95,7 @@ class Shipment(Base):
     id = Column(Integer, primary_key=True, index=True)
     tracking_id = Column(String, unique=True, index=True, nullable=False)
     customer_id = Column(Integer, ForeignKey("users.id"), nullable=False) # The requester user
-    account_id = Column(Integer, ForeignKey("customer_accounts.id"), nullable=True) # Linked account
+    account_id = Column(Integer, ForeignKey("customer_accounts.id"), nullable=False) # Linked account
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=True) # Linked order
     driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=True)
     

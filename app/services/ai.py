@@ -207,7 +207,7 @@ def process_chat(db: Session, user: User, conversation_id: int, user_message: st
     # Check if we should mock LLM response for local tests missing the API key
     if client.api_key == "dummy_key_for_testing":
         # Mocking for CI/tests
-        response_content = "This is a mock AI response since OPENAI_API_KEY is not set. I see you asked: " + user_message
+        response_content = "AI assistant is running in demo mode right now — responses are simulated."
         ai_msg = ConversationMessage(conversation_id=conv.id, role="assistant", content=response_content)
         db.add(ai_msg)
         db.commit()
