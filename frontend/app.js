@@ -302,6 +302,90 @@ document.addEventListener('DOMContentLoaded', () => {
   
   setTimeout(() => initTiltEffect('.stat-card, .panel, .login-form-card'), 500);
 
+  
+  // SHIPMENTS PAGE LOGIC
+  const searchInput = document.getElementById('shipment-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll('#shipments-table-body tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  }
+
+  const refreshBtn = document.getElementById('shipments-refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      const icon = refreshBtn.querySelector('svg');
+      if (icon) icon.style.transform = 'rotate(180deg)';
+      if (icon) icon.style.transition = 'transform 0.3s ease';
+      await fetchShipmentsPage();
+      setTimeout(() => { if(icon) icon.style.transform = 'rotate(0deg)'; }, 300);
+    });
+  }
+
+  const newShipmentBtn = document.getElementById('new-shipment-btn');
+  const modal = document.getElementById('new-shipment-modal');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const nsForm = document.getElementById('new-shipment-form');
+
+  if (newShipmentBtn && modal) {
+    newShipmentBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+  }
+  if (closeModalBtn && modal) {
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  }
+  if (nsForm) {
+    nsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const origin = document.getElementById('ns-origin').value;
+      const destination = document.getElementById('ns-destination').value;
+      const receiver = document.getElementById('ns-receiver').value;
+      const sender = document.getElementById('ns-sender').value;
+      
+      const token = localStorage.getItem('parcelpilot_token');
+      const submitBtn = document.getElementById('ns-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.7';
+      submitBtn.textContent = 'Creating...';
+
+      try {
+        const payload = { origin, destination, receiver_name: receiver, sender_name: sender };
+        const res = await fetch('/api/v1/shipments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          modal.classList.add('hidden');
+          nsForm.reset();
+          await fetchShipmentsPage();
+          if (typeof fetchDashboardData === 'function') fetchDashboardData(); // Update dashboard too
+        } else {
+          alert('Failed to create shipment. Please try again.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Connection error.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.textContent = 'Create Shipment';
+      }
+    });
+  }
+
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
