@@ -81,8 +81,8 @@ async function fetchDashboardData() {
 }
 
 function renderCharts(total, inTransit, delivered, alerts) {
-  const distCanvas = document.getElementById('status-distribution');
-  const actCanvas = document.getElementById('activity-chart');
+  const distCanvas = document.getElementById('chart-distribution');
+  const actCanvas = document.getElementById('chart-activity');
   
   if (distCanvas && window.Chart) {
     const ctxDist = distCanvas.getContext('2d');
