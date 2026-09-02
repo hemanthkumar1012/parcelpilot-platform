@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ParcelPilot — Logistics Control Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -306,56 +307,19 @@
   class="sidebar">
 
   <div class="sidebar-top">
-
-    <div class="brand-mark brand-mark-sidebar">
-
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 34 34"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg">
-
-        <rect
-          width="34"
-          height="34"
-          rx="9"
-          fill="#2F6FED"/>
-
-        <path
-          d="M9 17 L15 23 L25 11"
-          stroke="white"
-          stroke-width="2.6"
-          stroke-linecap="round"
-          stroke-linejoin="round"/>
-
-      </svg>
-
-
-      <div class="brand-text">
-
-        <span class="brand-title">
-          ParcelPilot
-        </span>
-
-        <span class="brand-subtitle">
-          Logistics Control Center
-        </span>
-
+    <div class="brand-mark brand-mark-sidebar" style="display:flex; align-items:center; gap:12px; padding: 8px 0;">
+      <div style="background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(37,99,235,0.2);">
+        <i data-lucide="package" width="18" height="18"></i>
       </div>
-
+      <div class="brand-text" style="display:flex; flex-direction:column;">
+        <span class="brand-title" style="font-weight: 700; font-size: 1.15rem; color: #0f172a; letter-spacing: -0.025em; line-height: 1.2;">ParcelPilot</span>
+        <span class="brand-subtitle" style="font-size: 0.75rem; color: #64748b; font-weight: 500;">Logistics Control</span>
+      </div>
     </div>
-
-
-    <button
-      id="sidebar-close-btn"
-      class="sidebar-close-btn"
-      aria-label="Close menu">
-      ✕
+    <button id="sidebar-close-btn" class="sidebar-close-btn" aria-label="Close menu" style="color: #64748b; background: none; border: none; cursor: pointer;">
+      <i data-lucide="x" width="20" height="20"></i>
     </button>
-
   </div>
-
 
   <!-- ============================= NAVIGATION ============================= -->
 
@@ -368,11 +332,7 @@
       data-page="dashboard"
       type="button">
 
-      <span
-        class="nav-icon"
-        aria-hidden="true">
-        ◇
-      </span>
+      <i data-lucide="layout-dashboard" class="nav-icon" width="18" height="18"></i>
 
       <span>
         Dashboard
@@ -386,11 +346,7 @@
       data-page="shipments"
       type="button">
 
-      <span
-        class="nav-icon"
-        aria-hidden="true">
-        ▤
-      </span>
+      <i data-lucide="boxes" class="nav-icon" width="18" height="18"></i>
 
       <span>
         Shipments
@@ -404,11 +360,7 @@
       data-page="tracking"
       type="button">
 
-      <span
-        class="nav-icon"
-        aria-hidden="true">
-        ◎
-      </span>
+      <i data-lucide="map" class="nav-icon" width="18" height="18"></i>
 
       <span>
         Tracking
@@ -422,11 +374,7 @@
       data-page="drivers"
       type="button">
 
-      <span
-        class="nav-icon"
-        aria-hidden="true">
-        ▣
-      </span>
+      <i data-lucide="users" class="nav-icon" width="18" height="18"></i>
 
       <span>
         Drivers
@@ -440,11 +388,7 @@
       data-page="notifications"
       type="button">
 
-      <span
-        class="nav-icon"
-        aria-hidden="true">
-        ◈
-      </span>
+      <i data-lucide="bell" class="nav-icon" width="18" height="18"></i>
 
       <span>
         Notifications
@@ -464,58 +408,24 @@
 
   <!-- ============================= SIDEBAR USER ============================= -->
 
-  <div class="sidebar-bottom">
-
-    <div class="system-status">
-
-      <span
-        id="system-status-dot"
-        class="status-dot status-dot-ok">
-      </span>
-
-      <span id="system-status-text">
-        All systems operational
-      </span>
-
+  <div class="sidebar-bottom" style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: auto;">
+    <div class="system-status" style="display:flex; align-items:center; gap:8px; margin-bottom: 16px; font-size: 0.8rem; color: #64748b; font-weight: 500;">
+      <span style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; display:inline-block; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);"></span>
+      All systems operational
     </div>
-
-
-    <div class="sidebar-user">
-
-      <div
-        class="user-avatar"
-        id="sidebar-user-avatar">
-        ?
+    <div class="sidebar-user" style="display:flex; align-items:center; gap:12px; margin-bottom: 16px;">
+      <div class="user-avatar" id="sidebar-user-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0; color: #475569; display:flex; align-items:center; justify-content:center; font-weight: 600; font-size: 0.9rem;">
+        <i data-lucide="user" width="18" height="18"></i>
       </div>
-
-      <div class="user-meta">
-
-        <span
-          id="sidebar-user-name"
-          class="user-name">
-          —
-        </span>
-
-        <span
-          id="sidebar-user-email"
-          class="user-email">
-          —
-        </span>
-
+      <div class="user-meta" style="display:flex; flex-direction:column; overflow:hidden;">
+        <span id="sidebar-user-name" class="user-name" style="font-weight: 600; font-size: 0.85rem; color: #0f172a; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">Guest Account</span>
+        <span id="sidebar-user-email" class="user-email" style="font-size: 0.75rem; color: #64748b; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">Read-only demo access</span>
       </div>
-
     </div>
-
-
-    <button
-      id="logout-btn"
-      class="icon-btn btn-block"
-      type="button">
-      Log out
+    <button id="logout-btn" class="icon-btn" style="width: 100%; display:flex; align-items:center; justify-content:center; gap:8px; padding: 8px; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 8px; color: #475569; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+      <i data-lucide="log-out" width="16" height="16"></i> Log out
     </button>
-
   </div>
-
 </aside>
 
 
@@ -528,30 +438,15 @@
     <button
       id="mobile-menu-btn"
       class="mobile-menu-btn"
-      aria-label="Open menu">
-      ☰
+      aria-label="Open menu" style="background:none; border:none; color:#0f172a; cursor:pointer;">
+      <i data-lucide="menu" width="24" height="24"></i>
     </button>
 
 
-    <div class="topbar-titles">
-
-      <h1 id="page-title">
-        Dashboard
-      </h1>
-
-      <p id="page-subtitle">
-        Operational overview across every shipment.
-      </p>
-
-      <!-- Guest indicator -->
-
-      <span
-        id="guest-mode-badge"
-        class="guest-mode-badge"
-        hidden>
-        DEMO MODE · READ ONLY
-      </span>
-
+    <div class="topbar-titles" style="display:flex; flex-direction:column; justify-content:center;">
+      <h1 id="page-title" style="margin:0; font-size: 1.5rem; font-weight: 700; color: #0f172a; letter-spacing: -0.025em; line-height: 1.2;">Dashboard</h1>
+      <p id="page-subtitle" style="margin:4px 0 0 0; font-size: 0.875rem; color: #64748b; font-weight: 400;">Operational overview across every shipment.</p>
+      <span id="guest-mode-badge" class="guest-mode-badge" style="margin-top: 4px; font-size: 0.7rem; font-weight: 600; color: #d97706; background: #fef3c7; padding: 2px 6px; border-radius: 4px; display:inline-block; width: fit-content;" hidden>DEMO MODE · READ ONLY</span>
     </div>
 
 
@@ -575,7 +470,7 @@
         type="button">
 
         <span aria-hidden="true">
-          ◈
+          <i data-lucide="bell" class="nav-icon" width="18" height="18"></i>
         </span>
 
         <span
@@ -825,7 +720,7 @@
             hidden>
 
             <span class="empty-icon">
-              ▤
+              <i data-lucide="boxes" class="nav-icon" width="18" height="18"></i>
             </span>
 
             <p>
@@ -1026,7 +921,7 @@
           hidden>
 
           <span class="empty-icon">
-            ▤
+            <i data-lucide="boxes" class="nav-icon" width="18" height="18"></i>
           </span>
 
           <p>
@@ -1186,7 +1081,7 @@
         hidden>
 
         <span class="empty-icon">
-          ▣
+          <i data-lucide="users" class="nav-icon" width="18" height="18"></i>
         </span>
 
         <p>
@@ -1290,7 +1185,7 @@
         hidden>
 
         <span class="empty-icon">
-          ◈
+          <i data-lucide="bell" class="nav-icon" width="18" height="18"></i>
         </span>
 
         <p>
