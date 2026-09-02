@@ -81,6 +81,8 @@ async function fetchDashboardData() {
 }
 
 function renderCharts(total, inTransit, delivered, alerts) {
+  if (window.Chart) Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
+
   const distCanvas = document.getElementById('chart-distribution');
   const actCanvas = document.getElementById('chart-activity');
   
