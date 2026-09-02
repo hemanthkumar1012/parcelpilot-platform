@@ -67,7 +67,7 @@ parcelpilot-platform/
 5. **Seed Demo Data:**
    To populate the database with demo accounts, shipments, and support tickets (useful for guest mode):
    ```bash
-   python -m scripts.seed_ai_data
+   python scripts/seed_demo.py
    ```
 
 6. **Start the Application:**
