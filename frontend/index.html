@@ -555,24 +555,14 @@
     </div>
 
 
-    <form
-      id="global-search-form"
-      class="global-search"
-      role="search">
-
-      <input
-        type="text"
-        id="global-search-input"
-        placeholder="Search shipments..." city…"
-        aria-label="Global shipment search" />
-
-      <button
-        type="submit"
-        class="global-search-btn"
-        aria-label="Search">
-        ⏎
-      </button>
-
+    <form id="global-search-form" class="global-search" role="search">
+      <div class="search-input-wrapper">
+        <i data-lucide="search" class="search-prefix-icon"></i>
+        <input type="text" id="global-search-input" placeholder="Search shipments..." aria-label="Global shipment search" />
+        <div class="search-kbd-shortcut">
+          <kbd>⌘</kbd><kbd>K</kbd>
+        </div>
+      </div>
     </form>
 
 
