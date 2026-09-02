@@ -64,9 +64,7 @@ p { margin: 0; color: var(--text-muted); }
 a { color: var(--primary-blue); text-decoration: none; }
 ul, li { list-style: none; margin: 0; padding: 0; }
 
-/* -------------------------------------------------------------
-   LAYOUT
-------------------------------------------------------------- */
+/* Layout */
 .app-screen {
   display: flex;
   height: 100vh;
@@ -175,9 +173,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 .topbar-titles h2 { font-size: 18px; }
 .topbar-actions { display: flex; align-items: center; gap: var(--space-3); }
 
-/* -------------------------------------------------------------
-   DASHBOARD GRIDS & CARDS
-------------------------------------------------------------- */
+/* Dashboard Grids & Cards */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -242,9 +238,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 .status-dot-info { background-color: var(--status-info-bg); color: var(--status-info); }
 
 
-/* -------------------------------------------------------------
-   LOGIN SCREEN
-------------------------------------------------------------- */
+/* Login Screen */
 .login-screen {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -289,9 +283,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 .guest-mode-btn { width: 100%; margin-top: var(--space-2); }
 .login-divider { text-align: center; margin: var(--space-4) 0; color: var(--text-light); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
-/* -------------------------------------------------------------
-   FORMS & BUTTONS
-------------------------------------------------------------- */
+/* Forms & Buttons */
 .form-field { margin-bottom: var(--space-3); }
 .form-field label { display: block; font-size: 14px; font-weight: 500; margin-bottom: var(--space-1); }
 .form-field input {
@@ -310,9 +302,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 .btn-secondary { background-color: white; border: 1px solid var(--border-light); color: var(--text-main); }
 .btn-block { width: 100%; }
 
-/* -------------------------------------------------------------
-   AI WIDGET
-------------------------------------------------------------- */
+/* Ai Widget */
 .ai-floating-btn {
   position: fixed; bottom: var(--space-4); right: var(--space-4);
   background-color: var(--primary-blue); color: white;
@@ -339,9 +329,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 .ai-input-area { padding: var(--space-3); border-top: 1px solid var(--border-light); display: flex; gap: var(--space-2); }
 .ai-input-area input { flex: 1; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-md); outline: none; }
 
-/* -------------------------------------------------------------
-   MEDIA QUERIES
-------------------------------------------------------------- */
+/* Media Queries */
 @media (max-width: 1024px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -354,9 +342,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
   .dashboard-grid-lower { grid-template-columns: 1fr; }
 }
 
-/* -------------------------------------------------------------
-   MOTION (STAGE 2)
-------------------------------------------------------------- */
+/* Motion (Stage 2) */
 @keyframes skeletonLoading {
   0% { background-color: var(--border-light); }
   50% { background-color: var(--bg-app); }
@@ -499,9 +485,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 }
 
 
-/* -----------------------------------------
-   VISUAL POLISH & HIERARCHY OVERRIDES
-   ----------------------------------------- */
+/* Visual Polish & Hierarchy Overrides */
 /* 1. Stat Cards Typography & Accents */
 .stat-card {
   position: relative;
@@ -579,7 +563,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 }
 
 
-/* --- 3D Premium Search Bar --- */
+/* Premium Search Bar */
 .global-search {
   flex: 1;
   max-width: 400px;
@@ -731,7 +715,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
 }
 
 
-/* --- ULTIMATE POLISH OVERRIDES --- */
+/* Final Polish Overrides */
 
 /* Panels */
 .panel {
@@ -860,7 +844,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
   background-color: #f8fafc;
 }
 
-/* --- 3D and Dynamic Effects --- */
+/* Dynamic Effects */
 #shipment-search-input:focus {
   outline: none;
   border-color: #3b82f6 !important;
@@ -895,7 +879,7 @@ ul, li { list-style: none; margin: 0; padding: 0; }
   transform: translateY(0);
 }
 
-/* --- LOGIN POLISH OVERRIDES --- */
+/* Login Overrides */
 
 /* Fix text contrast on the blue left panel */
 .login-headline {

@@ -1,41 +1,39 @@
 # ParcelPilot Platform
 
-ParcelPilot Platform is a unified logistics and shipment tracking system with an integrated AI customer support assistant. Built with FastAPI and PostgreSQL, it provides a robust API for managing shipments, orders, and support tickets, along with a Vanilla JS frontend dashboard.
+ParcelPilot is a modern logistics and shipment tracking platform built with FastAPI, PostgreSQL, and Vanilla JS. It features a built-in AI customer support assistant and comprehensive SLA management for logistics operators.
 
-## Overview
+## Features
 
-ParcelPilot manages the entire lifecycle of a shipment, from creation to delivery. It includes:
-- **Shipment Tracking:** Customers can track shipments, monitor statuses (e.g., pending, in_transit, delivered), and view historical tracking events.
-- **Support & SLA Management:** Customers and admins can manage support tickets, track SLA violations, and monitor carrier faults.
-- **AI Customer Support:** An integrated AI assistant that helps customers track their shipments, check SLAs, and prepare escalations automatically using the OpenAI API.
-- **Authentication & Guest Access:** Secure JWT-based authentication with strict tenant isolation, plus a robust "Continue as Guest" mode providing access to demo data without risking private customer data.
+- **End-to-End Shipment Tracking:** Monitor shipments from origin to destination with real-time status updates.
+- **SLA & Support Management:** Track support tickets, carrier faults, and SLA violations internally.
+- **AI-Powered Customer Support:** Includes an integrated OpenAI-powered assistant that can lookup shipments, verify SLA policies, and prepare ticket escalations automatically.
+- **Secure Architecture:** JWT authentication, strict tenant isolation via account IDs, and a safe read-only "Guest Mode" for demonstrations.
 
-## Technology Stack
+## Tech Stack
 
-- **Backend:** Python, FastAPI, SQLAlchemy, Alembic
-- **Database:** PostgreSQL (with SQLite fallback for local testing)
-- **Frontend:** Vanilla HTML/CSS/JavaScript (No frameworks, lightweight)
-- **AI Integration:** OpenAI Python SDK (function calling for tools)
+- **Backend:** Python 3.10+, FastAPI, SQLAlchemy, Alembic
+- **Database:** PostgreSQL (defaults to SQLite for local development)
+- **Frontend:** HTML, CSS, Vanilla JS (No build step required)
+- **AI Integration:** OpenAI Python SDK
 
 ## Project Structure
 
-```
+```text
 parcelpilot-platform/
 ├── app/
-│   ├── api/          # FastAPI routers and endpoints (v1)
-│   ├── core/         # Security, JWT, config, middleware
-│   ├── db/           # SQLAlchemy models and database setup
-│   ├── schemas/      # Pydantic validation schemas
-│   ├── services/     # Business logic and AI orchestration
-│   └── tools/        # Tools exposed to the AI agent
+│   ├── api/          # FastAPI routes
+│   ├── core/         # Config, security, and dependencies
+│   ├── db/           # SQLAlchemy models
+│   ├── schemas/      # Pydantic models
+│   ├── services/     # Business logic
+│   └── tools/        # Tools exposed to the LLM
 ├── alembic/          # Database migrations
-├── data/             # SLA and Policy PDF knowledge base
-├── frontend/         # Static HTML/JS/CSS assets
-├── scripts/          # Database seeding scripts
+├── frontend/         # Static web assets
+├── scripts/          # Database seeding
 └── tests/            # Pytest test suite
 ```
 
-## Local Setup
+## Quick Start
 
 1. **Clone the repository:**
    ```bash
@@ -43,65 +41,45 @@ parcelpilot-platform/
    cd parcelpilot-platform
    ```
 
-2. **Environment Variables:**
-   Copy the example config and fill in your keys:
+2. **Configure environment:**
    ```bash
    cp .env.example .env
    ```
-   *Required variables:*
-   - `OPENAI_API_KEY`: Required for the AI chat assistant.
-   - `SECRET_KEY`: Used for JWT signing.
-   - `DATABASE_URL`: Your PostgreSQL connection string. (Defaults to `sqlite:///./test.db` if omitted for testing).
+   Add your `OPENAI_API_KEY` to the `.env` file. You can also specify a custom `DATABASE_URL` if you want to use PostgreSQL instead of the default SQLite.
 
 3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Initialize the Database:**
-   If using SQLite, the tables are auto-created. For PostgreSQL, run Alembic migrations:
+4. **Initialize database & seed demo data:**
    ```bash
    alembic upgrade head
-   ```
-
-5. **Seed Demo Data:**
-   To populate the database with demo accounts, shipments, and support tickets (useful for guest mode):
-   ```bash
    python scripts/seed_demo.py
    ```
+   *Note: `seed_demo.py` will generate realistic sample shipments and support tickets for testing.*
 
-6. **Start the Application:**
+5. **Run the development server:**
    ```bash
    uvicorn app.main:app --reload
    ```
-   Navigate to `http://localhost:8000` to view the frontend dashboard.
-   Navigate to `http://localhost:8000/docs` to view the Swagger API documentation.
+   The dashboard will be available at `http://localhost:8000`. 
+   API documentation is available at `http://localhost:8000/docs`.
 
 ## Testing
 
-The project uses `pytest`. Tests can run against an isolated SQLite memory database or a real PostgreSQL instance.
+Run the test suite using `pytest`:
 
 ```bash
-# Run the fast test suite (SQLite)
+# Run local tests (SQLite memory DB)
 pytest --ignore=tests/test_postgres_integration.py
 
-# Run integration tests (Requires PostgreSQL)
+# Run integration tests against a live PostgreSQL database
 TEST_DATABASE_URL=postgresql://user:password@localhost:5432/testdb pytest tests/test_postgres_integration.py
 ```
 
-## AI Provider Configuration
+## AI Agent Safety
 
-The AI assistant uses the `openai` Python package. It expects `OPENAI_API_KEY` in the environment. Tools are securely sandboxed: the backend strictly enforces that users (or guests) can only lookup and interact with data they own (`current_user.account_id`). The AI agent does not make authorization decisions.
-
-## Security Considerations
-
-- **Tenant Isolation:** All database queries implicitly filter by the authenticated user's account ID.
-- **Guest Restrictions:** Guests cannot perform state-changing mutations (e.g., escalating support tickets).
-- **Tool Validation:** The AI tool dispatch layer catches malformed tool arguments safely.
-
-## Security & Agent Safety Design
-
-The platform ensures strict boundary isolation between the LLM logic and application state:
-
-- **Staged-Confirmation Flow:** The AI is strictly barred from modifying sensitive entities directly. Instead, when an LLM requests a state change (like escalating a ticket), it invokes `prepare_escalation` in `app/tools/agent_tools.py`. This generates a secure `pending` record in the `agent_actions` table. A human user must explicitly submit a subsequent `confirm_action` call to formally execute it.
-- **Tenant Isolation Enforcement:** The LLM does NOT manage authorization parameters (e.g., `account_id`). When the AI attempts to lookup data, the `_is_authorized` fallback in `app/tools/agent_tools.py` intercepts the retrieved record. It enforces that `current_user.account_id` matching rules apply explicitly at the backend execution layer before passing any data back to the LLM context.
+The integrated AI assistant is designed with strict security boundaries:
+- **No Direct Writes:** The LLM cannot modify application state directly. State changes (like escalating tickets) are generated as `pending` actions that a human user must confirm.
+- **Enforced Isolation:** Authorization (e.g., checking `account_id`) is handled at the database execution layer, not by the LLM. The AI only has access to records owned by the authenticated user.
