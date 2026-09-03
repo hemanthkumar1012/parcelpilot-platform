@@ -8,17 +8,59 @@ async function renderAuthState() {
   const loginView = document.getElementById('login-view');
   const dashboardView = document.getElementById('dashboard-view');
   
-  if (loginView) loginView.hidden = isLoggedIn;
-  if (dashboardView) {
-    dashboardView.hidden = !isLoggedIn;
-    if (isLoggedIn) {
-      dashboardView.classList.remove('hidden');
-      dashboardView.removeAttribute('hidden');
-    }
-  }
-  
+  // Add base classes for transition
+  if (loginView && !loginView.classList.contains('view-container')) loginView.classList.add('view-container');
+  if (dashboardView && !dashboardView.classList.contains('view-container')) dashboardView.classList.add('view-container');
+
   if (isLoggedIn) {
+    if (loginView) {
+      loginView.classList.add('view-hidden');
+      loginView.classList.remove('view-visible');
+      setTimeout(() => { loginView.hidden = true; }, 400); // Wait for fade out
+    }
+    if (dashboardView) {
+      dashboardView.hidden = false;
+      dashboardView.classList.remove('hidden');
+      // Small timeout to allow display:block to apply before opacity transition
+      setTimeout(() => {
+        dashboardView.classList.remove('view-hidden');
+        dashboardView.classList.add('view-visible');
+      }, 50);
+    }
+    
+    // Switch default active page to dashboard if not set
+    const currentActive = document.querySelector('.page:not(.hidden)');
+    if (!currentActive) {
+      document.querySelectorAll('.page').forEach(p => {
+        if (p.id === 'page-dashboard') {
+          p.classList.remove('hidden');
+          p.hidden = false;
+        } else {
+          p.classList.add('hidden');
+          p.hidden = true;
+        }
+      });
+      document.querySelectorAll('.nav-item').forEach(nav => {
+        if (nav.dataset.page === 'dashboard') nav.setAttribute('aria-current', 'page');
+        else nav.removeAttribute('aria-current');
+      });
+    }
+    
     if (typeof fetchDashboardData === 'function') fetchDashboardData();
+  } else {
+    // Logged out
+    if (dashboardView) {
+      dashboardView.classList.add('view-hidden');
+      dashboardView.classList.remove('view-visible');
+      setTimeout(() => { dashboardView.hidden = true; }, 400);
+    }
+    if (loginView) {
+      loginView.hidden = false;
+      setTimeout(() => {
+        loginView.classList.remove('view-hidden');
+        loginView.classList.add('view-visible');
+      }, 50);
+    }
   }
 }
 
@@ -444,13 +486,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const guestBtnClass = document.querySelector('.guest-mode-btn');
   if (guestBtnClass) {
     guestBtnClass.addEventListener('click', async () => {
+      guestBtnClass.classList.add('btn-loading');
       try {
         const res = await fetch('/api/v1/auth/guest', { method: 'POST' });
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error('Guest login failed');
         const data = await res.json();
         localStorage.setItem('parcelpilot_token', data.access_token);
-        renderAuthState();
-      } catch (err) {}
+        // Add a slight artificial delay for a premium feel
+        setTimeout(() => {
+          guestBtnClass.classList.remove('btn-loading');
+          renderAuthState();
+        }, 300);
+      } catch (err) {
+        console.error(err);
+        guestBtnClass.classList.remove('btn-loading');
+      }
     });
   }
 
