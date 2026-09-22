@@ -2,11 +2,13 @@ import pytest
 from app.db.models import Role, ShipmentStatus
 
 @pytest.fixture
-def auth_admin(client, db_session):
+def auth_admin(client, db_session, auth_customer):
     client.post("/api/auth/register", json={"name": "Admin", "email": "admin_drv@a.com", "password": "password"})
     from app.db.models import User
     admin = db_session.query(User).filter_by(email="admin_drv@a.com").first()
+    customer = db_session.query(User).filter_by(email="cust_drv@a.com").first()
     admin.role = Role.ADMIN
+    admin.account_id = customer.account_id
     db_session.commit()
     res = client.post("/api/auth/login", data={"username": "admin_drv@a.com", "password": "password"})
     return {"Authorization": f"Bearer {res.json()['access_token']}"}
