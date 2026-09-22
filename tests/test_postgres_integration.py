@@ -93,10 +93,13 @@ def test_pg_tracking_integrity(pg_client, pg_session):
     pg_client.post("/api/auth/register", json={"name": "Admin", "email": "admin@a.com", "password": "password"})
     admin_user = pg_session.query(User).filter_by(email="admin@a.com").first()
     admin_user.role = Role.ADMIN
+    # Put the admin in the same tenant as the customer created below.
+    pg_client.post("/api/auth/register", json={"name": "C", "email": "c@a.com", "password": "password"})
+    customer = pg_session.query(User).filter_by(email="c@a.com").first()
+    admin_user.account_id = customer.account_id
     pg_session.commit()
     t_admin = pg_client.post("/api/auth/login", data={"username": "admin@a.com", "password": "password"}).json()["access_token"]
 
-    pg_client.post("/api/auth/register", json={"name": "C", "email": "c@a.com", "password": "password"})
     t_c = pg_client.post("/api/auth/login", data={"username": "c@a.com", "password": "password"}).json()["access_token"]
 
     res_s = pg_client.post("/api/shipments", json={"sender_name": "S", "receiver_name": "R", "origin": "O", "destination": "D"}, headers={"Authorization": f"Bearer {t_c}"})
@@ -142,6 +145,8 @@ def test_pg_notification_integration(pg_client, pg_session):
     pg_client.post("/api/auth/register", json={"name": "NA", "email": "na@a.com", "password": "password"})
     admin = pg_session.query(User).filter_by(email="na@a.com").first()
     admin.role = Role.ADMIN
+    customer = pg_session.query(User).filter_by(email="nc@a.com").first()
+    admin.account_id = customer.account_id
     pg_session.commit()
     t_admin = pg_client.post("/api/auth/login", data={"username": "na@a.com", "password": "password"}).json()["access_token"]
 
