@@ -9,16 +9,32 @@ from app.services import driver as driver_service
 
 router = APIRouter()
 
+
 @router.post("", response_model=DriverResponse, status_code=201)
-def create_driver(driver_in: DriverCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_driver(
+    driver_in: DriverCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Register a new driver profile (Admin only)."""
     if current_user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can create drivers")
-    return driver_service.create_driver(db, driver_in)
+    return driver_service.create_driver(db, driver_in, account_id=current_user.account_id)
+
 
 @router.get("", response_model=List[DriverResponse])
-def list_drivers(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """List all drivers and their assignments (Admin only)."""
+def list_drivers(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List drivers belonging to the current admin's account."""
     if current_user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can view drivers")
-    return driver_service.list_drivers(db, skip=skip, limit=limit)
+    return driver_service.list_drivers(
+        db,
+        account_id=current_user.account_id,
+        skip=skip,
+        limit=limit,
+    )
