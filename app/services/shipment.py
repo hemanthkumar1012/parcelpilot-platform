@@ -137,6 +137,8 @@ def get_shipment_by_id(db: Session, shipment_id: int, user: User) -> Shipment:
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
+    if shipment.account_id != user.account_id:
+        raise HTTPException(status_code=403, detail="Shipment belongs to another account")
     if user.role == Role.CUSTOMER or user.role == Role.GUEST:
         if user.account_id and shipment.account_id != user.account_id:
             raise HTTPException(status_code=403, detail="Not authorized to access this shipment")
@@ -180,6 +182,10 @@ def update_shipment_driver(db: Session, shipment_id: int, driver_id: int, user: 
         driver = db.query(Driver).filter(Driver.id == driver_id).first()
         if not driver:
             raise HTTPException(status_code=404, detail="Driver not found")
+        if driver.user.account_id != user.account_id:
+            raise HTTPException(status_code=403, detail="Driver belongs to another account")
+        if shipment.account_id != user.account_id:
+            raise HTTPException(status_code=403, detail="Shipment belongs to another account")
         if not driver.is_available:
             raise HTTPException(status_code=400, detail="Driver is not available")
 
