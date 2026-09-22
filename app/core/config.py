@@ -1,7 +1,8 @@
-import os
+import json
 from typing import List, Union
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict, field_validator
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "ParcelPilot"
@@ -17,13 +18,30 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Union[str, List[str]] = ["*"]
 
     @field_validator("CORS_ORIGINS", mode="before")
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, list):
+            return [str(i).strip() for i in v if str(i).strip()]
 
-    model_config = ConfigDict(env_file='.env', extra='ignore')
+        if isinstance(v, str):
+            value = v.strip()
+            if not value:
+                return ["*"]
+
+            if value.startswith("["):
+                try:
+                    parsed = json.loads(value)
+                except json.JSONDecodeError as exc:
+                    raise ValueError("CORS_ORIGINS must be a comma-separated list or JSON array") from exc
+                if not isinstance(parsed, list):
+                    raise ValueError("CORS_ORIGINS JSON value must be an array")
+                return [str(i).strip() for i in parsed if str(i).strip()]
+
+            return [i.strip() for i in value.split(",") if i.strip()]
+
+        raise ValueError("Invalid CORS_ORIGINS value")
+
+    model_config = ConfigDict(env_file=".env", extra="ignore")
+
 
 settings = Settings()
