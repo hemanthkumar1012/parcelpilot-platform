@@ -155,7 +155,12 @@ def list_shipments(db: Session, user: User, skip: int = 0, limit: int = 10):
     query = db.query(Shipment).options(joinedload(Shipment.tracking_events))
     count_query = db.query(Shipment)
     
-    if user.role == Role.CUSTOMER or user.role == Role.GUEST:
+    if user.role == Role.ADMIN:
+        if user.account_id is None:
+            return {"total": 0, "items": []}
+        query = query.filter(Shipment.account_id == user.account_id)
+        count_query = count_query.filter(Shipment.account_id == user.account_id)
+    elif user.role == Role.CUSTOMER or user.role == Role.GUEST:
         if user.account_id:
             query = query.filter(Shipment.account_id == user.account_id)
             count_query = count_query.filter(Shipment.account_id == user.account_id)
@@ -163,6 +168,8 @@ def list_shipments(db: Session, user: User, skip: int = 0, limit: int = 10):
             query = query.filter(Shipment.customer_id == user.id)
             count_query = count_query.filter(Shipment.customer_id == user.id)
     elif user.role == Role.DRIVER:
+        if not user.driver_profile:
+            return {"total": 0, "items": []}
         query = query.filter(Shipment.driver_id == user.driver_profile.id)
         count_query = count_query.filter(Shipment.driver_id == user.driver_profile.id)
     
