@@ -486,20 +486,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const guestBtnClass = document.querySelector('.guest-mode-btn');
   if (guestBtnClass) {
     guestBtnClass.addEventListener('click', async () => {
+      if (guestBtnClass.disabled) return;
+
       guestBtnClass.classList.add('btn-loading');
+      guestBtnClass.disabled = true;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       try {
-        const res = await fetch('/api/v1/auth/guest', { method: 'POST' });
-        if (!res.ok) throw new Error('Guest login failed');
-        const data = await res.json();
+        const res = await fetch('/api/v1/auth/guest', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+
+        const raw = await res.text();
+        let data = {};
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch (_) {
+          data = { error: { message: raw || 'Invalid server response' } };
+        }
+
+        if (!res.ok || !data.access_token) {
+          const message = data?.error?.message || data?.detail || 'Guest login failed';
+          throw new Error(message);
+        }
+
         localStorage.setItem('parcelpilot_token', data.access_token);
-        // Add a slight artificial delay for a premium feel
-        setTimeout(() => {
-          guestBtnClass.classList.remove('btn-loading');
-          renderAuthState();
-        }, 300);
+        renderAuthState();
       } catch (err) {
-        console.error(err);
+        console.error('Guest login failed:', err);
+        const loginError = document.getElementById('login-error');
+        if (loginError) {
+          loginError.textContent =
+            err?.name === 'AbortError'
+              ? 'Guest login timed out. The API/database is not responding.'
+              : (err?.message || 'Guest login failed. Please try again.');
+          loginError.hidden = false;
+        }
+      } finally {
+        clearTimeout(timeoutId);
         guestBtnClass.classList.remove('btn-loading');
+        guestBtnClass.disabled = false;
       }
     });
   }
