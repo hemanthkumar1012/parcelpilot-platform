@@ -14,7 +14,7 @@ def auth_customer2(client):
     return {"Authorization": f"Bearer {res.json()['access_token']}"}
 
 @pytest.fixture
-def auth_admin(client, db_session):
+def auth_admin(client, db_session, auth_customer):
     client.post("/api/auth/register", json={"name": "Admin", "email": "admin_ship@a.com", "password": "password"})
     from app.db.models import User
     admin = db_session.query(User).filter_by(email="admin_ship@a.com").first()
