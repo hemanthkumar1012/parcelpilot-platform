@@ -7,7 +7,9 @@ def test_notification_lifecycle(client, db_session):
 
     client.post("/api/auth/register", json={"name": "NA", "email": "a@a.com", "password": "password"})
     admin = db_session.query(User).filter_by(email="a@a.com").first()
+    customer = db_session.query(User).filter_by(email="c@a.com").first()
     admin.role = Role.ADMIN
+    admin.account_id = customer.account_id
     db_session.commit()
     a_t = client.post("/api/auth/login", data={"username": "a@a.com", "password": "password"}).json()["access_token"]
 
