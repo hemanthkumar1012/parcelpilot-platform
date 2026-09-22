@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from app.db.models import Notification, NotificationType
 
@@ -36,7 +36,7 @@ def mark_notification_read(db: Session, notification_id: int, user_id: int) -> O
     notif = db.query(Notification).filter(Notification.id == notification_id, Notification.user_id == user_id).first()
     if notif and not notif.is_read:
         notif.is_read = True
-        notif.read_at = datetime.utcnow()
+        notif.read_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(notif)
     return notif
