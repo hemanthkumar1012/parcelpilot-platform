@@ -18,7 +18,9 @@ def auth_admin(client, db_session):
     client.post("/api/auth/register", json={"name": "Admin", "email": "admin_ship@a.com", "password": "password"})
     from app.db.models import User
     admin = db_session.query(User).filter_by(email="admin_ship@a.com").first()
+    customer = db_session.query(User).filter_by(email="cust_ship@a.com").first()
     admin.role = Role.ADMIN
+    admin.account_id = customer.account_id
     db_session.commit()
     res = client.post("/api/auth/login", data={"username": "admin_ship@a.com", "password": "password"})
     return {"Authorization": f"Bearer {res.json()['access_token']}"}
@@ -151,7 +153,8 @@ def test_full_canonical_lifecycle(client, auth_customer, auth_admin, db_session)
     # Assign driver (CREATED -> ASSIGNED)
     # Create a mock driver
     from app.db.models import User, Role, Driver
-    user = User(name="Drv", email="drv_life@a.com", hashed_password="pw", role=Role.DRIVER)
+    admin = db_session.query(User).filter_by(email="admin_ship@a.com").first()
+    user = User(name="Drv", email="drv_life@a.com", hashed_password="pw", role=Role.DRIVER, account_id=admin.account_id)
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
