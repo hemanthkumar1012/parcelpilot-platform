@@ -1,6 +1,12 @@
-import pytest
 import os
-os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only-32bytes"
+
+# These environment variables must be set before importing app.main because
+# the application settings and SQLAlchemy engine are initialized at import time.
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-only-32bytes")
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ.setdefault("CORS_ORIGINS", '["http://testserver", "http://localhost:3000"]')
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -9,7 +15,7 @@ from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.db.database import Base, get_db
 
-# Test database
+
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
@@ -19,9 +25,9 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 @pytest.fixture(scope="function")
 def db_session():
-    # Create tables
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
@@ -30,6 +36,7 @@ def db_session():
         db.close()
         Base.metadata.drop_all(bind=engine)
 
+
 @pytest.fixture(scope="function")
 def client(db_session):
     def override_get_db():
@@ -37,6 +44,8 @@ def client(db_session):
             yield db_session
         finally:
             pass
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.pop(get_db, None)
