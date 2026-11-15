@@ -1,3 +1,5 @@
+# Runtime verification marker: exercise the complete automated suite in CI.
+
 def test_health_check(client):
     response = client.get("/health")
     assert response.status_code == 200
