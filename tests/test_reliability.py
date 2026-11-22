@@ -138,3 +138,14 @@ def test_readiness_returns_503_when_database_fails(client, db_session, monkeypat
     monkeypatch.setattr(db_session, "execute", broken_execute)
     response = client.get("/ready")
     assert response.status_code == 503
+
+
+def test_empty_api_key_falls_back_to_demo_mode(client, monkeypatch):
+    # Production had OPENAI_API_KEY set to an empty string, and chat crashed with a 500.
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    guest = client.post("/api/v1/auth/guest")
+    token = guest.json()["access_token"]
+    response = client.post("/api/v1/chat", json={"message": "Where is PP-DEMO-1001?"},
+                           headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert "demo mode" in response.json()["response"]
