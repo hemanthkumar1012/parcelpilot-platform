@@ -64,13 +64,13 @@ jobs:
       - name: Validate PostgreSQL migrations
         env:
           SECRET_KEY: test-secret-key-for-pytest-only-32bytes
-          DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/testdb"
+          DATABASE_URL: "postgresql+pg8000://testuser:testpassword@localhost:5432/testdb"
         run: alembic upgrade head
 
       - name: Run Pytest (PostgreSQL Integration)
         env:
           SECRET_KEY: test-secret-key-for-pytest-only-32bytes
-          DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/testdb"
-          TEST_DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/testdb"
+          DATABASE_URL: "postgresql+pg8000://testuser:testpassword@localhost:5432/testdb"
+          TEST_DATABASE_URL: "postgresql+pg8000://testuser:testpassword@localhost:5432/testdb"
           CORS_ORIGINS: '["http://testserver", "http://localhost:3000"]'
         run: pytest -q tests/test_postgres_integration.py
