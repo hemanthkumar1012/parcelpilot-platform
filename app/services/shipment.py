@@ -137,7 +137,8 @@ def get_shipment_by_id(db: Session, shipment_id: int, user: User) -> Shipment:
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
-    if shipment.account_id != user.account_id:
+    # Admins manage every account; everyone else is limited to their own account.
+    if user.role != Role.ADMIN and shipment.account_id != user.account_id:
         raise HTTPException(status_code=403, detail="Shipment belongs to another account")
     if user.role == Role.CUSTOMER or user.role == Role.GUEST:
         if user.account_id and shipment.account_id != user.account_id:
