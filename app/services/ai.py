@@ -26,7 +26,9 @@ AI_UNAVAILABLE_MESSAGE = "The AI assistant is unavailable right now. Please try 
 
 
 def get_openai_client():
-    api_key = os.environ.get("OPENAI_API_KEY", "dummy_key_for_testing")
+    # An unset OR empty key means demo mode. An empty string used to reach OpenAI(),
+    # which raised "Missing credentials" before any error handling and returned a 500.
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip() or "dummy_key_for_testing"
     return OpenAI(api_key=api_key)
 
 TOOLS = [
