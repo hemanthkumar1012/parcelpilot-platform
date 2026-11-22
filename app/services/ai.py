@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from sqlalchemy.orm import Session
 from openai import OpenAI
@@ -15,7 +16,14 @@ Guidelines:
 3. If the user asks to perform an action (escalate, cancel), use prepare_escalation or similar tools, and explain that confirmation is required.
 4. Do NOT output raw JSON unless specifically requested. Answer in friendly natural language.
 5. If the database does not contain the answer, say that the information is unavailable.
+6. For SLA questions, use the "assessment" returned by shipment_sla_status. Do not recalculate delays or credits yourself.
+7. If knowledge_search returns "supported": false, do not guess a policy. Say you do not have that information.
 """
+
+logger = logging.getLogger("parcelpilot.ai")
+
+AI_UNAVAILABLE_MESSAGE = "The AI assistant is unavailable right now. Please try again in a few minutes."
+
 
 def get_openai_client():
     api_key = os.environ.get("OPENAI_API_KEY", "dummy_key_for_testing")
@@ -220,8 +228,10 @@ def process_chat(db: Session, user: User, conversation_id: int, user_message: st
             tools=TOOLS,
             tool_choice="auto"
         )
-    except Exception as e:
-        err = f"AI Service Error: {str(e)}"
+    except Exception:
+        # Do not show provider error text to the user; log it for debugging.
+        logger.exception("LLM request failed")
+        err = AI_UNAVAILABLE_MESSAGE
         err_msg = ConversationMessage(conversation_id=conv.id, role="assistant", content=err)
         db.add(err_msg)
         db.commit()
@@ -241,7 +251,13 @@ def process_chat(db: Session, user: User, conversation_id: int, user_message: st
         
         # Execute tools
         for tc in choice.message.tool_calls:
-            result = dispatch_tool(tc, db, user)
+            try:
+                result = dispatch_tool(tc, db, user)
+            except Exception:
+                # A failed lookup (for example the database is down) must not crash the chat.
+                logger.exception("Tool %s failed", tc.function.name)
+                db.rollback()
+                result = {"error": "This lookup is unavailable right now. Please try again later."}
             
             # Save tool result
             tool_msg = ConversationMessage(conversation_id=conv.id, role="tool", content=json.dumps(result))
@@ -263,8 +279,9 @@ def process_chat(db: Session, user: User, conversation_id: int, user_message: st
                 messages=simplified_history
             )
             final_content = second_resp.choices[0].message.content
-        except Exception as e:
-            final_content = f"Error processing tool results: {str(e)}"
+        except Exception:
+            logger.exception("LLM follow-up request failed")
+            final_content = AI_UNAVAILABLE_MESSAGE
             
         final_msg = ConversationMessage(conversation_id=conv.id, role="assistant", content=final_content)
         db.add(final_msg)
