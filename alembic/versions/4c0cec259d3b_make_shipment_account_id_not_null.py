@@ -15,11 +15,11 @@ branch_labels = None
 depends_on = None
 
 def upgrade() -> None:
-    op.alter_column('shipments', 'account_id',
-               existing_type=sa.INTEGER(),
-               nullable=False)
+    # batch mode: SQLite cannot ALTER a column in place, so Alembic copies the table.
+    # On PostgreSQL this is a normal ALTER COLUMN.
+    with op.batch_alter_table('shipments') as batch_op:
+        batch_op.alter_column('account_id', existing_type=sa.INTEGER(), nullable=False)
 
 def downgrade() -> None:
-    op.alter_column('shipments', 'account_id',
-               existing_type=sa.INTEGER(),
-               nullable=True)
+    with op.batch_alter_table('shipments') as batch_op:
+        batch_op.alter_column('account_id', existing_type=sa.INTEGER(), nullable=True)
