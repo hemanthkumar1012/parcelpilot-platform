@@ -4,6 +4,8 @@ from app.db.models import User, Shipment, Order, SupportTicket, ShipmentTracking
 from datetime import datetime, timezone
 import uuid
 
+from app.services.sla import assess_pickup
+
 def _is_authorized(entity, current_user: User) -> bool:
     if current_user.role == Role.ADMIN:
         return True
@@ -100,8 +102,21 @@ def shipment_sla_status(db: Session, tracking_id: str, current_user: User):
         return {"error": "Shipment not found or unauthorized."}
     
     account = db.query(CustomerAccount).filter(CustomerAccount.id == shipment.account_id).first()
-    
+    contract_file = account.contract_file if account else None
+
+    # The breach and credit decision is made in code (app/services/sla.py),
+    # so the model explains a computed result instead of judging timestamps itself.
+    assessment = assess_pickup(
+        shipment.pickup_window_end,
+        shipment.pickup_actual_at,
+        carrier_fault=bool(shipment.carrier_fault),
+        customer_fault=bool(shipment.customer_fault),
+        fee=shipment.shipment_fee,
+        contract_file=contract_file,
+    )
+
     return {
+        "assessment": assessment.to_dict(),
         "tracking_id": shipment.tracking_id,
         "carrier": shipment.carrier,
         "pickup_window_end": str(shipment.pickup_window_end) if shipment.pickup_window_end else None,
@@ -188,9 +203,13 @@ def knowledge_search(db: Session, query: str, current_user: User):
         })
         
     if not results:
-        results.append({
-            "source": "General Knowledge Base",
-            "content": "No specific SLA clauses found for this query. Refer to standard terms."
-        })
-        
-    return {"results": results}
+        # Say clearly that nothing supports an answer. The old fallback text
+        # ("Refer to standard terms") invited the model to answer anyway.
+        return {
+            "results": [],
+            "supported": False,
+            "message": "No policy in the knowledge base covers this question. "
+                       "Tell the user you do not have this information and offer to create a support ticket.",
+        }
+
+    return {"results": results, "supported": True}

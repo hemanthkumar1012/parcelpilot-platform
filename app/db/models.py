@@ -208,6 +208,7 @@ class AgentAction(Base):
     reference_entity = Column(String, nullable=True)
     reference_id = Column(String, nullable=True)
     status = Column(String, default="pending", nullable=False)
+    details = Column(Text, nullable=True)  # JSON, e.g. the escalation reason
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=True)
